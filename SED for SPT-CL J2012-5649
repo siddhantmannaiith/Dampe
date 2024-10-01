@@ -1,0 +1,72 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+def plotSED(Emin, Emax):
+    # File paths for Google Colab or local environment
+    fluxfile = '/content/Abell_flux_SED_binned.dat'  # Update as necessary
+
+    try:
+        # Load the SED data
+        data = np.loadtxt(fluxfile)
+        emin = data[:, 0]  # Convert to GeV
+        emax = data[:, 1]  # Convert to GeV
+        flux = data[:, 2]
+        error = data[:, 3]
+        TSvalue = data[:, 4]
+        upperLimit = data[:, 5]
+
+        x = np.sqrt(emin * emax)
+        xerr = np.array([x - emin, emax - x])
+        y = x**2 * flux / (emax - emin)
+        yerr = x**2 * error / (emax - emin)
+        y_ul = x**2 * upperLimit / (emax - emin)
+        y_ulerr = np.array([0.5 * y_ul, [0] * len(y)])
+
+        fig, ax = plt.subplots()
+
+        # Plot upper limits with red color for TS < 9 and small markers
+        ax.errorbar(
+            x[TSvalue < 9], y_ul[TSvalue < 9],
+            xerr=xerr[:, TSvalue < 9], yerr=y_ulerr[:, TSvalue < 9],
+            fmt='.k', color='red', uplims=True, markersize=12, label = 'Upper Limits (Dampe)'
+        )
+        
+        data=np.loadtxt('/content/fermidata.dat')
+        y=data[:,0]
+        yerr=data[:,1]
+        print (y[2])
+        c=np.logspace(3,4,5)
+        emax=c[1:]
+        emin=c[:-1]
+        x=np.sqrt(emin*emax)
+        xerr = np.array([x - emin, emax - x])
+        print (xerr)
+        #fig, ax = plt.subplots()
+        ax.errorbar(x, y, xerr=xerr,yerr=yerr, fmt='.k', color='blue', label='Fermi-LAT detections', markersize=12)
+        ax.set_yscale('log')
+        ax.set_xscale('log')
+        ax.set_xlim(800, 1e6)
+        ax.set_ylim(1e-8, 1e-3)
+        
+        # Set axis labels with bold font
+        ax.set_xlabel(r'Energy [MeV]', fontweight='bold')
+        ax.set_ylabel(r'Energy Flux [MeV cm$^{-2}$ s$^{-1}$]', fontweight='bold')
+
+        # Legend
+        ax.legend(loc='upper left')
+
+        # Save the figure
+        png_file = fluxfile.replace('.dat', '.png')
+        pdf_file = fluxfile.replace('.dat', '.pdf')
+        plt.savefig(png_file)
+        plt.savefig(pdf_file)
+
+        return png_file, pdf_file
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+# Call the function with example Emin and Emax
+png_path, pdf_path = plotSED(800, 1e6)
+print(f"Plot saved as PNG: {png_path}")
+print(f"Plot saved as PDF: {pdf_path}")
