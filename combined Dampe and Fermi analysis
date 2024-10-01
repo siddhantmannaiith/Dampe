@@ -1,0 +1,60 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+def plotSED(Emin,Emax):
+    # File paths for Google Colab or local environment
+    datafile = '/dataset.dat'  # Update as necessary
+
+
+    try:
+        # Load the SED data
+        data = np.loadtxt(datafile)
+        emin = data[:, 0]  # Convert to GeV
+        emax = data[:, 1]  # Convert to GeV
+        flux = data[:, 2]
+        error = data[:, 3]
+        TSvalue = data[:, 4]
+        upperLimit = data[:, 5]
+
+        x = np.sqrt(emin * emax)
+        xerr = np.array([x - emin, emax - x])
+        y = x**2 * flux / (emax - emin)
+        yerr = x**2 * error / (emax - emin)
+        y_ul = x**2 * upperLimit / (emax - emin)
+        y_ulerr = np.array([0.5 * y_ul, [0] * len(y)])
+
+
+        fig, ax = plt.subplots()
+
+
+        # Plot upper limits with red color for TS < 9
+        ax.errorbar(x[TSvalue < 9], y_ul[TSvalue < 9], xerr=xerr[:, TSvalue < 9], yerr=y_ulerr[:, TSvalue < 9], fmt='.', color='red', uplims=True, markersize =12)
+        
+        ax.errorbar(x[TSvalue>9], y[TSvalue>9], xerr=xerr[:,TSvalue>=9], yerr=yerr[TSvalue>=9], fmt='.', color='blue', markersize=12)
+        
+        # Set axis limits and scales
+        ax.set_xlim(3.2e3, 32e3)  # Convert limits to GeV
+        ax.set_ylim(3e-9, 2e-5)
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+
+        # Set axis labels with bold font
+        ax.set_xlabel(r'Energy [MeV]', fontweight='bold',fontsize = 14)
+        ax.set_ylabel(r'E$^2$ dN/dE [MeV cm$^{-2}$ s$^{-1}$]', fontweight='bold',fontsize =14)
+
+
+        # Save the figure
+        png_file = datafile.replace('.dat', '.png')
+        pdf_file = datafile.replace('.dat', '.pdf')
+        plt.savefig(png_file)
+        plt.savefig(pdf_file)
+
+        return png_file, pdf_path
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+# Call the function with example Emin and Emax
+png_path, pdf_path = plotSED(3200, 32000)
+print(f"Plot saved as PNG: {png_path}")
+print(f"Plot saved as PDF: {pdf_path}")
